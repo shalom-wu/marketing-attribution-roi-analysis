@@ -1,0 +1,4 @@
+scenario,description,shift_fraction_to_markov,total_budget,budget_shifted,estimated_revenue,estimated_revenue_lift,estimated_lift_pct,incremental_roas
+Conservative rebalance,Move partway toward Markov credit; lowest disruption.,0.35,174000.0,10540.230820911069,352033.7529956867,12561.80299568671,0.037003949798169566,1.1917958163463542
+Balanced reallocation,Meaningful shift while keeping channel mix diversified.,0.65,174000.0,19574.714381691985,361334.80877366144,21862.858773661428,0.06440254864551087,1.116892862258543
+Aggressive Markov target,Fully align budget with Markov credit; highest execution risk.,1.0,174000.0,30114.945202603056,370680.44772042125,31208.497720421234,0.09193247842839813,1.0363126185507272
