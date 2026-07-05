@@ -83,7 +83,7 @@ def plot_touchpoint_frequency(touch_summary, output_dir: Path) -> None:
         fig,
         ax,
         "Touchpoint volume by marketing channel",
-        "Synthetic customer journeys, one row per observed marketing touchpoint, January to March 2026.",
+        "Processed CriteoPrivateAd sample, one row per display impression touchpoint from day_int=1.",
     )
     _save(fig, output_dir, "touchpoint_frequency_by_channel")
 
@@ -162,14 +162,14 @@ def plot_attribution_comparison(attribution_summary, output_dir: Path) -> None:
     )
     ax.yaxis.set_major_formatter(mticker.PercentFormatter(1.0))
     ax.set_xlabel("")
-    ax.set_ylabel("Share of attributed revenue")
+    ax.set_ylabel("Share of attributed contribution")
     ax.tick_params(axis="x", rotation=25)
     ax.legend(loc="lower left", bbox_to_anchor=(0, 1.01), frameon=False, ncol=4, borderaxespad=0)
     add_chart_header(
         fig,
         ax,
         "Attribution credit changes materially by model",
-        "Shares allocate the same converted revenue pool across first touch, last touch, linear, and Markov removal-effect methods.",
+        "Shares allocate the same assumed contribution pool across first touch, last touch, linear, and Markov removal-effect methods.",
     )
     _save(fig, output_dir, "attribution_model_comparison")
 
@@ -226,7 +226,7 @@ def plot_scenario_lift(scenarios, output_dir: Path) -> None:
     )
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x/1000:,.0f}K"))
     ax.set_xlabel("")
-    ax.set_ylabel("Estimated revenue lift")
+    ax.set_ylabel("Estimated contribution lift")
     ax.tick_params(axis="x", rotation=15)
     add_chart_header(
         fig,

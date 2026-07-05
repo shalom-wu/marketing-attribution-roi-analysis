@@ -12,26 +12,37 @@ CONVERSION = "__CONVERSION__"
 NULL = "__NULL__"
 
 
-def _empty_credit() -> dict[str, float]:
-    return {channel: 0.0 for channel in CHANNELS}
+def _channels_from_journeys(journeys: pd.DataFrame) -> list[str]:
+    seen: list[str] = []
+    for path in journeys["path"]:
+        for channel in path:
+            if channel not in seen:
+                seen.append(channel)
+    configured = [channel for channel in CHANNELS if channel in seen]
+    remaining = [channel for channel in seen if channel not in configured]
+    return [*configured, *remaining]
+
+
+def _empty_credit(channels: list[str]) -> dict[str, float]:
+    return {channel: 0.0 for channel in channels}
 
 
 def first_touch_attribution(journeys: pd.DataFrame) -> dict[str, float]:
-    credit = _empty_credit()
+    credit = _empty_credit(_channels_from_journeys(journeys))
     for row in journeys.loc[journeys["converted"] == 1].itertuples():
         credit[row.path[0]] += float(row.revenue)
     return credit
 
 
 def last_touch_attribution(journeys: pd.DataFrame) -> dict[str, float]:
-    credit = _empty_credit()
+    credit = _empty_credit(_channels_from_journeys(journeys))
     for row in journeys.loc[journeys["converted"] == 1].itertuples():
         credit[row.path[-1]] += float(row.revenue)
     return credit
 
 
 def linear_attribution(journeys: pd.DataFrame) -> dict[str, float]:
-    credit = _empty_credit()
+    credit = _empty_credit(_channels_from_journeys(journeys))
     for row in journeys.loc[journeys["converted"] == 1].itertuples():
         path = list(row.path)
         per_touch_credit = float(row.revenue) / len(path)
@@ -124,7 +135,8 @@ def markov_removal_attribution(journeys: pd.DataFrame) -> dict[str, float]:
     total_revenue = float(journeys.loc[journeys["converted"] == 1, "revenue"].sum())
     effects: dict[str, float] = {}
 
-    for channel in CHANNELS:
+    channels = _channels_from_journeys(journeys)
+    for channel in channels:
         removal_probability = conversion_absorption_probability(
             remove_channel_from_transitions(transitions, channel)
         )
@@ -141,6 +153,7 @@ def markov_removal_attribution(journeys: pd.DataFrame) -> dict[str, float]:
 
 def attribution_summary(journeys: pd.DataFrame) -> pd.DataFrame:
     total_revenue = float(journeys.loc[journeys["converted"] == 1, "revenue"].sum())
+    channels = _channels_from_journeys(journeys)
     methods = {
         "First touch": first_touch_attribution(journeys),
         "Last touch": last_touch_attribution(journeys),
@@ -149,7 +162,7 @@ def attribution_summary(journeys: pd.DataFrame) -> pd.DataFrame:
     }
     rows = []
     for method, credits in methods.items():
-        for channel in CHANNELS:
+        for channel in channels:
             credit_value = float(credits.get(channel, 0.0))
             rows.append(
                 {

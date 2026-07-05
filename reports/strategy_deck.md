@@ -1,6 +1,6 @@
 # Marketing Channel Attribution & Budget ROI Strategy
 
-Synthetic portfolio analysis for a mid-size e-commerce business  
+Sourced CriteoPrivateAd sample analysis for a mid-size e-commerce business  
 Prepared by Shalom Wu
 
 ---
@@ -19,9 +19,9 @@ Last-touch attribution is easy to explain but risky for budget decisions.
 
 Attribution method choice materially changes channel credit.
 
-- Markov removal gives Paid Search the highest credit at 18.0%.
-- Last-touch credits the same channel at 26.0%.
-- The synthetic dataset contains 15,000 journeys and a 12.7% conversion rate.
+- Markov removal gives Long-tail placements the highest credit at 51.3%.
+- Last-touch credits the same channel at 50.7%.
+- The sourced Criteo sample contains 11,343 multi-touch journeys and a 1.8% conversion rate.
 
 ![Attribution comparison](figures/attribution_model_comparison.png)
 
@@ -29,11 +29,11 @@ Attribution method choice materially changes channel credit.
 
 ## 3. Cost Of The Status Quo
 
-Using last-touch as the budget guide would misallocate an estimated $37.8K.
+Using last-touch as the budget guide would misallocate an estimated $8.1K.
 
-- That equals 21.7% of the synthetic quarter budget.
-- The biggest increase under Markov is Referral ($8.3K).
-- The biggest reduction is Paid Search ($-23.6K).
+- That equals 4.7% of the assumed pilot budget.
+- The biggest increase under Markov is Long-tail placements ($51.2K).
+- The biggest reduction is Publisher 03 ($-9.3K).
 
 ![Budget gap](figures/budget_gap_to_markov.png)
 
@@ -45,9 +45,9 @@ Three scenarios translate attribution into operating choices.
 
 | Scenario | Estimated Lift | Incremental ROAS | Tradeoff |
 |---|---:|---:|---|
-| Conservative rebalance | $12.6K | 1.19x | Move partway toward Markov credit; lowest disruption. |
-| Balanced reallocation | $21.9K | 1.12x | Meaningful shift while keeping channel mix diversified. |
-| Aggressive Markov target | $31.2K | 1.04x | Fully align budget with Markov credit; highest execution risk. |
+| Conservative rebalance | $3.8K | 0.21x | Move partway toward Markov credit; lowest disruption. |
+| Balanced reallocation | $6.5K | 0.20x | Meaningful shift while keeping channel mix diversified. |
+| Aggressive Markov target | $9.2K | 0.18x | Fully align budget with Markov credit; highest execution risk. |
 
 ![Scenario lift](figures/scenario_revenue_lift.png)
 
@@ -58,7 +58,7 @@ Three scenarios translate attribution into operating choices.
 Use a balanced reallocation, not a full swing to the model.
 
 - Shift 65% of the gap between current spend and Markov-informed spend.
-- Expected synthetic revenue lift: $21.9K, or 6.4%.
+- Expected assumed contribution lift: $6.5K, or 19.0%.
 - Keep last-touch reporting for operational diagnostics, but do not use it as the primary budget allocator.
 - Validate the recommendation with a holdout or incrementality test before scaling.
 
@@ -75,17 +75,18 @@ Use a balanced reallocation, not a full swing to the model.
 
 ## 7. Appendix: Methodology
 
-- Dataset: deterministic synthetic customer journeys, clearly labeled as synthetic.
-- Grain: one touchpoint row per user journey interaction.
+- Dataset: processed sample from CriteoPrivateAd public anonymized advertising data.
+- Grain: one display impression transformed into one attribution touchpoint.
+- Channel definition: anonymized publisher placement groups, with the top eight publishers shown separately and the remaining publishers grouped as Long-tail placements.
 - Baselines: first-touch, last-touch, and linear attribution.
 - Data-driven model: Markov chain removal effect, which measures conversion-probability drop when a channel is removed from paths.
-- Budget model: current-quarter spend assumption, Markov credit shares, and a diminishing-returns response curve.
+- Budget model: assumed pilot spend, assumed contribution per sale, Markov credit shares, and a diminishing-returns response curve.
 
 ---
 
 ## 8. Appendix: Limitations
 
 - Attribution is correlational, not causal.
-- Synthetic data cannot prove real-world performance.
+- The sample is real Criteo data, but the channel names are anonymized and the repo uses one downloaded shard, not the full 100M-row dataset.
 - Channel costs, gross margin, customer lifetime value, and saturation would need real business inputs.
 - Real deployment should reconcile attribution with incrementality tests, media-mix modeling, and finance-approved contribution economics.

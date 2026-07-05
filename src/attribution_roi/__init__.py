@@ -5,6 +5,6 @@ __all__ = [
     "budget",
     "config",
     "data",
-    "synthetic",
+    "source_data",
     "viz",
 ]

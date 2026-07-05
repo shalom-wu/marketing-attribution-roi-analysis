@@ -1,0 +1,25 @@
+{
+  "dataset_type": "real public dataset sample",
+  "source_name": "CriteoPrivateAd",
+  "source_url": "https://huggingface.co/datasets/criteo/CriteoPrivateAd",
+  "source_file_url": "https://huggingface.co/datasets/criteo/CriteoPrivateAd/resolve/main/data/day_int=1/part-00238-7fb458b7-00d9-490c-b19b-addd568a5fe9-c000.gz.parquet",
+  "raw_local_path": "data/raw/criteo_day1_part-00238.parquet",
+  "processed_local_path": "data/processed/criteo_touchpoints_sample.csv",
+  "grain": "one display-ad impression row transformed into one attribution touchpoint",
+  "source_period": "Criteo 30-day live traffic sample; repo sample uses day_int=1 shard part-00238",
+  "sample_filter": "users with at least two impressions in the downloaded shard",
+  "channel_definition": "channel is an anonymized publisher placement group. Top eight publishers by touch volume are mapped to Publisher 01-08; the rest are grouped as Long-tail placements.",
+  "date_handling": "CriteoPrivateAd partitions by relative day_int, not real calendar dates. The repo maps day_int=1 to 2025-01-01 as a relative plotting date.",
+  "value_assumption": "Revenue is modeled as sales_count * $120 assumed contribution per sale because source data provides sales counts but not advertiser revenue.",
+  "channels": [
+    "Publisher 01",
+    "Publisher 02",
+    "Publisher 03",
+    "Publisher 04",
+    "Publisher 05",
+    "Publisher 06",
+    "Publisher 07",
+    "Publisher 08",
+    "Long-tail placements"
+  ]
+}

@@ -7,6 +7,7 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+tests/_tmp_source_data/
 
 # Environments
 .venv/
@@ -26,3 +27,4 @@ Thumbs.db
 # Local-only exports
 *.log
 .mplconfig/
+data/raw/
