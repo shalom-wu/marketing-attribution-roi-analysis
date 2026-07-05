@@ -1,27 +1,28 @@
-# Marketing Channel Attribution & Budget ROI Strategy
+# Marketing Attribution & Budget ROI Strategy
 
-Sourced CriteoPrivateAd sample analysis for a mid-size e-commerce business  
+CriteoPrivateAd sample analysis  
 Prepared by Shalom Wu
 
 ---
 
-## 1. Problem Framing
+## 1. The Problem
 
-Last-touch attribution is easy to explain but risky for budget decisions.
+Last-touch attribution is simple, which is why teams use it. The issue is that budget decisions need more than the final touch.
 
-- It gives 100% credit to the final observed channel before conversion.
-- That can over-credit demand-capture channels and under-credit channels that created the demand earlier.
-- The business problem is not "which channel touched the customer last?" It is "where should the next budget dollar go?"
+- Last-touch gives all credit to the last observed placement.
+- Earlier placements can matter even when they are not last.
+- The real question is not "what touched the customer last?" It is "where should the next dollar go?"
 
 ---
 
-## 2. Key Finding
+## 2. What Changed
 
-Attribution method choice materially changes channel credit.
+The biggest bucket is stable, but the smaller placements shift.
 
-- Markov removal gives Long-tail placements the highest credit at 51.3%.
-- Last-touch credits the same channel at 50.7%.
-- The sourced Criteo sample contains 11,343 multi-touch journeys and a 1.8% conversion rate.
+- `Long-tail placements`: 50.7% under last-touch vs. 51.3% under Markov.
+- `Publisher 03`: 3.8% under last-touch vs. 5.6% under Markov.
+- `Publisher 04`: 7.3% under last-touch vs. 4.1% under Markov.
+- Sample size: 11,343 multi-touch journeys, 1.8% conversion rate.
 
 ![Attribution comparison](figures/attribution_model_comparison.png)
 
@@ -29,11 +30,11 @@ Attribution method choice materially changes channel credit.
 
 ## 3. Cost Of The Status Quo
 
-Using last-touch as the budget guide would misallocate an estimated $8.1K.
+If last-touch drove the budget, about $8.1K would land in the wrong place relative to the Markov-informed mix.
 
-- That equals 4.7% of the assumed pilot budget.
-- The biggest increase under Markov is Long-tail placements ($51.2K).
-- The biggest reduction is Publisher 03 ($-9.3K).
+- That is 4.7% of the assumed pilot budget.
+- Biggest increase under Markov: Long-tail placements (+$51.2K).
+- Biggest reduction under Markov: Publisher 03 (-$9.3K).
 
 ![Budget gap](figures/budget_gap_to_markov.png)
 
@@ -41,7 +42,7 @@ Using last-touch as the budget guide would misallocate an estimated $8.1K.
 
 ## 4. Reallocation Scenarios
 
-Three scenarios translate attribution into operating choices.
+I modeled three levels of change. The more aggressive the shift, the higher the estimated contribution lift, but the less comfortable I would be rolling it out without a test.
 
 | Scenario | Estimated Lift | Incremental ROAS | Tradeoff |
 |---|---:|---:|---|
@@ -53,40 +54,39 @@ Three scenarios translate attribution into operating choices.
 
 ---
 
-## 5. Recommended Approach
+## 5. Recommendation
 
-Use a balanced reallocation, not a full swing to the model.
+Use the balanced scenario.
 
-- Shift 65% of the gap between current spend and Markov-informed spend.
+- Shift 65% of the gap between current spend and the Markov-informed mix.
 - Expected assumed contribution lift: $6.5K, or 19.0%.
-- Keep last-touch reporting for operational diagnostics, but do not use it as the primary budget allocator.
-- Validate the recommendation with a holdout or incrementality test before scaling.
+- Keep last-touch as a reporting view, not the main budget allocator.
+- Validate with a holdout or incrementality test before scaling.
 
 ---
 
-## 6. Deployment Strategy
+## 6. How I Would Roll It Out
 
-1. Keep current tracking taxonomy stable for one quarter.
-2. Report first-touch, last-touch, linear, and Markov credit side by side.
-3. Move budget in staged increments with guardrails on CPA, margin, and conversion volume.
-4. Use experiments to calibrate causal lift where the attribution model suggests material spend shifts.
-
----
-
-## 7. Appendix: Methodology
-
-- Dataset: processed sample from CriteoPrivateAd public anonymized advertising data.
-- Grain: one display impression transformed into one attribution touchpoint.
-- Channel definition: anonymized publisher placement groups, with the top eight publishers shown separately and the remaining publishers grouped as Long-tail placements.
-- Baselines: first-touch, last-touch, and linear attribution.
-- Data-driven model: Markov chain removal effect, which measures conversion-probability drop when a channel is removed from paths.
-- Budget model: assumed pilot spend, assumed contribution per sale, Markov credit shares, and a diminishing-returns response curve.
+1. Keep tracking stable for one quarter.
+2. Show first-touch, last-touch, linear, and Markov side by side.
+3. Move budget in stages, with guardrails on CPA, margin, and conversion volume.
+4. Test the biggest proposed shifts before making them permanent.
 
 ---
 
-## 8. Appendix: Limitations
+## 7. Method Notes
+
+- Data: processed CriteoPrivateAd sample.
+- Grain: one display impression becomes one attribution touchpoint.
+- Placement groups: top eight publishers shown separately; the rest grouped as Long-tail placements.
+- Models: first-touch, last-touch, linear, and Markov removal.
+- Budget layer: assumed pilot spend, assumed contribution per sale, and a simple diminishing-returns curve.
+
+---
+
+## 8. Limits
 
 - Attribution is correlational, not causal.
-- The sample is real Criteo data, but the channel names are anonymized and the repo uses one downloaded shard, not the full 100M-row dataset.
-- Channel costs, gross margin, customer lifetime value, and saturation would need real business inputs.
-- Real deployment should reconcile attribution with incrementality tests, media-mix modeling, and finance-approved contribution economics.
+- The source is real Criteo data, but the publisher names are anonymized.
+- The repo uses one shard, not the full CriteoPrivateAd dataset.
+- Real deployment would need actual spend, margin, LTV, saturation, and finance-approved contribution economics.

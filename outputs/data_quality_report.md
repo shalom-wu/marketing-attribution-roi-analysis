@@ -1,6 +1,6 @@
-# Data Quality Report
+# Data Quality Check
 
-This project uses a processed sample from the public CriteoPrivateAd dataset.
+This is the quick QA pass on the processed CriteoPrivateAd sample used in the project.
 
 | Check | Result |
 |---|---:|
@@ -12,7 +12,7 @@ This project uses a processed sample from the public CriteoPrivateAd dataset.
 | Invalid channels | None |
 | Date range | 2025-01-01 to 2025-01-01 |
 
-Null counts shown below are expected for `conversion_date`, because non-converting journeys do not have a conversion date.
+The only material null count is `conversion_date`, which is expected because non-converting journeys do not have a conversion date.
 
 ```json
 {

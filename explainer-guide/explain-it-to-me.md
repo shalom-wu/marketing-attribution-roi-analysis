@@ -2,15 +2,15 @@
 
 ## Section 1: Plain-English Walkthrough
 
-Marketing attribution means deciding which marketing touchpoints get credit when a customer converts.
+Marketing attribution is the question of who gets credit when a customer converts.
 
 Imagine someone sees several display ads from different publisher placements before buying. If the business uses last-touch attribution, the final observed placement gets all the credit. That is easy to explain, but it can be misleading if earlier placements helped move the customer along.
 
-This project uses a real public dataset sample from CriteoPrivateAd, an anonymized advertising dataset hosted by Criteo on Hugging Face. The source has user IDs, impression order, campaign IDs, publisher IDs, click labels, and sales labels. It does not reveal human-readable channel names or real advertiser revenue, so the repo maps anonymized publishers into placement groups like `Publisher 01` and uses explicit assumptions for dollarized ROI.
+For this project, I used a real public sample from CriteoPrivateAd, an anonymized advertising dataset hosted by Criteo on Hugging Face. The source has user IDs, impression order, campaign IDs, publisher IDs, click labels, and sales labels. It does not reveal friendly channel names or real advertiser revenue, so I map anonymized publishers into placement groups like `Publisher 01` and keep the dollar assumptions separate.
 
-The workflow:
+Here is what I built:
 
-1. Source and prepare a CriteoPrivateAd sample.
+1. Pull and prepare a CriteoPrivateAd sample.
 2. Explore placement frequency, conversion rates, and journey length.
 3. Compare first-touch, last-touch, linear, and Markov attribution.
 4. Translate attribution results into budget reallocation scenarios.
@@ -20,25 +20,25 @@ The workflow:
 
 ### 30-Second Version
 
-This project shows why last-touch attribution can misallocate marketing budget. It uses a real public CriteoPrivateAd sample, turns anonymized display impressions into user journeys, compares first-touch, last-touch, linear, and Markov attribution, then connects the model output to budget scenarios. The dollars are assumptions because the source includes sales labels but not advertiser revenue or budget.
+This project shows why last-touch attribution can be shaky as a budget tool. I use a real CriteoPrivateAd sample, turn anonymized display impressions into user journeys, compare first-touch, last-touch, linear, and Markov attribution, then connect the output to budget scenarios. The dollar values are assumptions because the source includes sales labels, not advertiser revenue or budget.
 
 ### 2-Minute Version
 
 Attribution is the problem of deciding which touchpoints deserve credit for conversions. Many teams use last-touch because it is simple: whichever touchpoint came right before conversion gets all the credit. The issue is that journeys often have multiple touches. Earlier touches may matter even if they were not last.
 
-In this project, I use CriteoPrivateAd, a public anonymized advertising dataset. The repo takes one real Parquet shard, filters to users with at least two impressions, and transforms those impressions into touchpoint-level journeys. The source does not provide named marketing channels, so publisher IDs are grouped into anonymized placement groups.
+I use CriteoPrivateAd, a public anonymized advertising dataset. The repo takes one real Parquet shard, filters to users with at least two impressions, and turns those impressions into touchpoint-level journeys. The source does not provide named marketing channels, so publisher IDs are grouped into anonymized placement groups.
 
 Then I compare simple attribution methods against a Markov removal-effect model. The Markov model asks: if this placement group disappeared from the journey graph, how much would modeled conversion probability fall? That gives a more journey-aware way to allocate credit than simply picking the first or last touch.
 
-Finally, I connect the attribution result to a budget decision. Because the source does not include spend or revenue, the budget and contribution values are stated assumptions. The result is a decision framework, not a causal proof.
+Finally, I connect the attribution result to a budget decision. Because the source does not include spend or revenue, the budget and contribution values are stated assumptions. So the result is a decision framework, not proof that a specific budget move will work.
 
 ### 5-Minute Version
 
-The project is built around a real marketing decision: how to allocate budget when customers interact with multiple ad placements before converting.
+The project is built around a real marketing decision: how to allocate budget when customers interact with more than one ad placement before converting.
 
 The dataset is sourced, not invented. It comes from CriteoPrivateAd on Hugging Face. The source data is anonymized, so it gives IDs rather than brand/channel names. That means the project is honest about what can and cannot be interpreted: we can compare publisher-placement groups, but we cannot say "paid search" or "email" because those labels are not in the data.
 
-The first part checks the prepared sample. It counts touchpoints by placement group, measures conversion rates for journeys that included each group, calculates average journey length, and summarizes common paths.
+The first part checks whether the prepared sample makes sense. It counts touchpoints by placement group, measures conversion rates for journeys that included each group, calculates average journey length, and summarizes common paths.
 
 The second part compares attribution methods:
 
@@ -47,7 +47,7 @@ The second part compares attribution methods:
 - Linear attribution splits credit evenly across touches.
 - Markov removal attribution builds a transition graph and estimates how much conversion probability drops when each placement group is removed.
 
-The third part turns the model into strategy. The source data has sales labels, but not a real budget or revenue. So the repo uses an assumed pilot budget and assumed contribution per sale. That lets the deck show the business logic of reallocation without pretending those dollars came from Criteo.
+The third part turns the model into strategy. The source data has sales labels, but not a real budget or revenue. So the repo uses an assumed pilot budget and assumed contribution per sale. That lets the deck show the business logic without pretending the dollar values came from Criteo.
 
 ## Section 3: How The Code Actually Works
 
@@ -61,7 +61,7 @@ Start here:
 4. `src/attribution_roi/data.py`: loads, cleans, validates, and summarizes journeys.
 5. `src/attribution_roi/attribution.py`: calculates first-touch, last-touch, linear, and Markov attribution.
 6. `src/attribution_roi/budget.py`: turns attribution results into budget gaps and scenarios.
-7. `src/attribution_roi/pipeline.py`: runs the full project workflow.
+7. `src/attribution_roi/pipeline.py`: runs the full analysis.
 8. `reports/strategy_deck.md`: the strategy deck.
 9. `outputs/`: generated tables.
 10. `tests/`: checks that the key logic works.
@@ -82,9 +82,9 @@ Start here:
 
 `markov_removal_attribution()` builds a transition graph from journey paths. It calculates baseline conversion probability, removes one placement group at a time, and measures how much conversion probability drops.
 
-`budget_recommendation()` compares assumed current budget to the Markov-informed budget. This is where the analysis becomes a business recommendation rather than just a model output.
+`budget_recommendation()` compares the assumed current budget to the Markov-informed budget. This is where the analysis becomes a business recommendation instead of just a model output.
 
-`scenario_summary()` estimates conservative, balanced, and aggressive reallocation scenarios using a simple diminishing-returns assumption.
+`scenario_summary()` estimates conservative, balanced, and aggressive reallocation scenarios with a simple diminishing-returns assumption.
 
 ### How Markov Attribution Works Conceptually
 
@@ -124,7 +124,7 @@ pytest
 
 ### What To Point To First In A Technical Conversation
 
-I would start with `src/attribution_roi/source_data.py`, because it proves the project is now using sourced public data and shows exactly how the sample is prepared.
+I would start with `src/attribution_roi/source_data.py`, because it shows exactly where the sourced data enters the project and how the sample is prepared.
 
 Then I would show `src/attribution_roi/attribution.py`, especially `markov_removal_attribution()`, because that is the core analytical step beyond simple baselines.
 
@@ -138,11 +138,11 @@ Because marketing budget is limited. If the measurement system gives too much cr
 
 ### Why not just use last-touch?
 
-Last-touch is simple, but it ignores everything that happened before the final touch. That can be useful for operational reporting, but it is too narrow for budget allocation.
+Last-touch is simple and easy to explain. I would still keep it around for reporting. I just would not use it by itself to decide budget, because it ignores everything before the final touch.
 
 ### Why use Markov over last-touch?
 
-Markov uses the whole observed journey sequence. It estimates how much conversion probability drops when a placement group is removed from the path graph.
+Markov uses the whole observed journey sequence. It estimates how much conversion probability drops when a placement group is removed from the path graph, which is closer to the budget question I care about.
 
 ### What does "the model is not proving causation" mean?
 
@@ -150,11 +150,11 @@ It means the model is looking at observed patterns, not running an experiment. I
 
 ### What would you do differently with real spend data?
 
-I would replace the assumed pilot budget and assumed contribution per sale with actual spend, media fees, gross margin, returns, discounts, and customer lifetime value.
+I would replace the assumed pilot budget and assumed contribution per sale with actual spend, media fees, gross margin, returns, discounts, and customer lifetime value. I would also split new and returning customers if the business cared about acquisition efficiency.
 
 ### How confident are you in the numbers?
 
-I am confident the code produces the stated outputs from the processed Criteo sample and documented assumptions. I would not claim the budget lift is guaranteed because the dollar values are assumptions and the attribution model is correlational.
+I am confident the code produces the stated outputs from the processed Criteo sample and documented assumptions. I would not claim the budget lift is guaranteed. The dollar values are assumptions, and attribution is still correlational.
 
 ### What is the biggest limitation?
 

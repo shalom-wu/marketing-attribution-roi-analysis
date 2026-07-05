@@ -23,9 +23,9 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
 
 
 def write_data_quality_markdown(path: Path, quality: dict[str, object]) -> None:
-    body = f"""# Data Quality Report
+    body = f"""# Data Quality Check
 
-This project uses a processed sample from the public CriteoPrivateAd dataset.
+This is the quick QA pass on the processed CriteoPrivateAd sample used in the project.
 
 | Check | Result |
 |---|---:|
@@ -37,7 +37,7 @@ This project uses a processed sample from the public CriteoPrivateAd dataset.
 | Invalid channels | {', '.join(quality['invalid_channels']) if quality['invalid_channels'] else 'None'} |
 | Date range | {quality['min_touchpoint_date']} to {quality['max_touchpoint_date']} |
 
-Null counts shown below are expected for `conversion_date`, because non-converting journeys do not have a conversion date.
+The only material null count is `conversion_date`, which is expected because non-converting journeys do not have a conversion date.
 
 ```json
 {json.dumps(quality['null_counts'], indent=2)}
@@ -47,9 +47,9 @@ Null counts shown below are expected for `conversion_date`, because non-converti
 
 
 def write_source_markdown(path: Path, assumptions: dict[str, object]) -> None:
-    body = f"""# Source Data Assumptions
+    body = f"""# Source Data Notes
 
-This dataset sample is sourced from CriteoPrivateAd, a public anonymized Criteo advertising dataset hosted on Hugging Face. The repo keeps a processed sample rather than the raw Parquet shard.
+This sample comes from CriteoPrivateAd, a public anonymized advertising dataset hosted on Hugging Face. I keep the processed sample in the repo and leave the raw Parquet shard out because it is large.
 
 | Field | Assumption |
 |---|---|
@@ -62,12 +62,12 @@ This dataset sample is sourced from CriteoPrivateAd, a public anonymized Criteo 
 
 ## Transformation Notes
 
-- {assumptions['channel_definition']}
-- {assumptions['date_handling']}
-- {assumptions['value_assumption']}
+- `channel` is an anonymized publisher placement group. The eight highest-volume publishers are labeled `Publisher 01` through `Publisher 08`; everything else is grouped as `Long-tail placements`.
+- CriteoPrivateAd uses relative `day_int` partitions, not real calendar dates. I map `day_int=1` to `2025-01-01` only to keep plots and tables readable.
+- Contribution value is modeled as `sales_count * $120` because the source provides sales labels, not advertiser revenue.
 - Channels included: {', '.join(assumptions['channels'])}.
 
-The source contains real anonymized display-ad impressions, campaign/publisher IDs, clicks, and sales labels. It does not contain named marketing channels, actual calendar dates, advertiser revenue, or a finance-approved media budget.
+The source contains real anonymized display-ad impressions, campaign and publisher IDs, click labels, and sales labels. It does not contain named marketing channels, actual calendar dates, advertiser revenue, or a finance-approved media budget.
 """
     path.write_text(body, encoding="utf-8")
 
@@ -92,22 +92,25 @@ def write_summary_report(
 
     body = f"""# Marketing Attribution & Budget ROI Analysis
 
-## Executive Summary
+## Bottom Line
 
-- **Last-touch attribution materially changes channel credit.** The Markov removal model gives the most credit to {top_markov['channel']} at {fmt_pct(top_markov['credit_share'])} of assumed contribution value, while last-touch would credit that channel at {fmt_pct(float(last.loc[top_markov['channel'], 'credit_share']))}.
-- **The budget issue is not just measurement; it is spend allocation.** A last-touch allocation would misdirect an estimated {fmt_money_k(status_quo['last_touch_misallocated_budget'])}, or {fmt_pct(status_quo['last_touch_misallocated_budget_share'])} of the assumed pilot budget, versus the Markov-informed mix.
-- **A balanced reallocation is the practical recommendation.** It estimates {fmt_money_k(recommended_scenario['estimated_revenue_lift'])} assumed contribution lift ({fmt_pct(recommended_scenario['estimated_lift_pct'])}) while avoiding the execution risk of a full model-driven swing.
-- **This is correlational, not causal.** Attribution models allocate credit across observed journeys; they do not prove incremental lift without experiments or stronger causal design.
+Last-touch is not wildly wrong in this sample, but it still changes the budget conversation. The top Markov placement, `{top_markov['channel']}`, gets {fmt_pct(top_markov['credit_share'])} of assumed contribution value under Markov and {fmt_pct(float(last.loc[top_markov['channel'], 'credit_share']))} under last-touch.
+
+Using last-touch as the budget guide would move an estimated **{fmt_money_k(status_quo['last_touch_misallocated_budget'])}** of the assumed pilot budget away from the Markov-informed mix. A balanced reallocation estimates **{fmt_money_k(recommended_scenario['estimated_revenue_lift'])}** in assumed contribution lift.
+
+I would treat this as a budget hypothesis, not a final answer. The model uses observed paths, so it is useful for prioritizing where to test, but it does not prove incrementality on its own.
 
 ## Dataset Profile
 
-The repository uses a processed sample from CriteoPrivateAd, a public anonymized Criteo advertising dataset hosted on Hugging Face. The sample contains {quality['rows']:,} display touchpoints across {quality['journeys']:,} multi-touch user journeys. Journey conversion rate is {fmt_pct(float(quality['conversion_rate']))}; average journey length is {avg_journey_length:.2f} touches. Criteo provides relative day partitions rather than calendar dates, so the repo maps `day_int=1` to a relative plotting date.
+The sample comes from CriteoPrivateAd, a public anonymized advertising dataset hosted on Hugging Face. I use one processed day-one shard and filter to multi-touch users. That leaves **{quality['rows']:,} display touchpoints** across **{quality['journeys']:,} journeys**. Conversion rate is **{fmt_pct(float(quality['conversion_rate']))}**, and the average journey has **{avg_journey_length:.2f} touches**.
+
+Criteo gives relative day partitions rather than real calendar dates, so `2025-01-01` is just a plotting date for `day_int=1`.
 
 ![Touchpoint frequency](figures/touchpoint_frequency_by_channel.png)
 
-## Channel Performance Context
+## Placement Performance Context
 
-Channel exposure conversion rates are descriptive. They should be read as "journeys that included this channel converted at this rate," not as a causal lift claim.
+These conversion rates are descriptive. They answer, "when this placement group showed up in a journey, how often did that journey convert?" They do not answer, "how many conversions did this placement cause?"
 
 | Channel | Touchpoints | Journeys Seen | Conversion Rate When Seen |
 |---|---:|---:|---:|
@@ -118,7 +121,7 @@ Channel exposure conversion rates are descriptive. They should be read as "journ
     body += f"""
 ## Attribution Model Comparison
 
-First-touch and last-touch answer simple operational questions, but they throw away most journey context. The Markov removal model asks how much the overall conversion probability falls when a publisher placement group is removed from paths, then allocates assumed contribution value based on that removal effect.
+First-touch and last-touch are useful because they are simple. The tradeoff is that each one throws away most of the path. Markov removal uses the sequence: it removes one placement group at a time and checks how much modeled conversion probability falls.
 
 ![Attribution comparison](figures/attribution_model_comparison.png)
 
@@ -137,7 +140,7 @@ First-touch and last-touch answer simple operational questions, but they throw a
     body += f"""
 ## Budget Implication
 
-The largest positive Markov budget gap is {increase_gap['channel']} at {fmt_money_k(increase_gap['budget_gap_to_markov'])}; the largest reduction is {reduction_gap['channel']} at {fmt_money_k(reduction_gap['budget_gap_to_markov'])}. Positive gaps indicate channels that would receive more budget under the Markov-informed allocation; negative gaps indicate reductions.
+Under the current pilot-budget assumption, Markov points more money toward `{increase_gap['channel']}` and less toward `{reduction_gap['channel']}`. The largest positive gap is **{increase_gap['channel']} ({fmt_money_k(increase_gap['budget_gap_to_markov'])})**. The largest reduction is **{reduction_gap['channel']} ({fmt_money_k(reduction_gap['budget_gap_to_markov'])})**.
 
 ![Budget gap](figures/budget_gap_to_markov.png)
 
@@ -153,12 +156,14 @@ The largest positive Markov budget gap is {increase_gap['channel']} at {fmt_mone
         )
 
     body += """
+My recommendation is the balanced scenario. It moves enough budget to matter without pretending the model is precise enough to justify a full immediate reallocation.
+
 ## Caveats And Assumptions
 
-- The dataset sample is real anonymized Criteo advertising data, but the repo filters to one day-one Parquet shard and multi-touch users.
-- Markov attribution is correlational. It is better than last-touch for using journey sequence information, but it still cannot prove what would have happened without a channel.
-- Dollarized spend and revenue are assumptions because this Criteo sample provides sales labels but not advertiser revenue or a channel budget.
-- Spend response uses a simple diminishing-returns curve. Real budget decisions should be validated with incrementality tests, geo holdouts, media-mix modeling, or randomized lift studies.
+- The dataset is real Criteo data, but this repo uses one shard and filters to multi-touch users.
+- Publisher IDs are anonymized, so the placement labels are readable names I assigned for analysis.
+- The dollar layer is assumption-based. Criteo provides sales labels, not advertiser revenue or media budget.
+- Markov attribution is correlational. I would validate any real budget move with incrementality testing, geo holdouts, randomized experiments, or media-mix modeling.
 """
     path.write_text(body, encoding="utf-8")
 
@@ -178,30 +183,30 @@ def write_strategy_deck(
     reduction = budget.sort_values("budget_gap_to_markov", ascending=True).iloc[0]
     balanced = scenarios.loc[scenarios["scenario"] == "Balanced reallocation"].iloc[0]
 
-    body = f"""# Marketing Channel Attribution & Budget ROI Strategy
+    body = f"""# Marketing Attribution & Budget ROI Strategy
 
-Sourced CriteoPrivateAd sample analysis for a mid-size e-commerce business  
+CriteoPrivateAd sample analysis
 Prepared by Shalom Wu
 
 ---
 
-## 1. Problem Framing
+## 1. The Problem
 
-Last-touch attribution is easy to explain but risky for budget decisions.
+Last-touch attribution is simple, which is why teams use it. The issue is that budget decisions need more than the final touch.
 
-- It gives 100% credit to the final observed channel before conversion.
-- That can over-credit demand-capture channels and under-credit channels that created the demand earlier.
-- The business problem is not "which channel touched the customer last?" It is "where should the next budget dollar go?"
+- Last-touch gives all credit to the last observed placement.
+- Earlier placements can matter even when they are not last.
+- The real question is not "what touched the customer last?" It is "where should the next dollar go?"
 
 ---
 
-## 2. Key Finding
+## 2. What Changed
 
-Attribution method choice materially changes channel credit.
+The biggest bucket is stable, but the smaller placements shift.
 
 - Markov removal gives {top['channel']} the highest credit at {fmt_pct(top['credit_share'])}.
 - Last-touch credits the same channel at {fmt_pct(float(last.loc[top['channel'], 'credit_share']))}.
-- The sourced Criteo sample contains {quality['journeys']:,} multi-touch journeys and a {fmt_pct(float(quality['conversion_rate']))} conversion rate.
+- Sample size: {quality['journeys']:,} multi-touch journeys, {fmt_pct(float(quality['conversion_rate']))} conversion rate.
 
 ![Attribution comparison](figures/attribution_model_comparison.png)
 
@@ -209,11 +214,11 @@ Attribution method choice materially changes channel credit.
 
 ## 3. Cost Of The Status Quo
 
-Using last-touch as the budget guide would misallocate an estimated {fmt_money_k(status_quo['last_touch_misallocated_budget'])}.
+If last-touch drove the budget, about {fmt_money_k(status_quo['last_touch_misallocated_budget'])} would land in the wrong place relative to the Markov-informed mix.
 
 - That equals {fmt_pct(status_quo['last_touch_misallocated_budget_share'])} of the assumed pilot budget.
-- The biggest increase under Markov is {top_gap['channel']} ({fmt_money_k(top_gap['budget_gap_to_markov'])}).
-- The biggest reduction is {reduction['channel']} ({fmt_money_k(reduction['budget_gap_to_markov'])}).
+- Biggest increase under Markov: {top_gap['channel']} ({fmt_money_k(top_gap['budget_gap_to_markov'])}).
+- Biggest reduction under Markov: {reduction['channel']} ({fmt_money_k(reduction['budget_gap_to_markov'])}).
 
 ![Budget gap](figures/budget_gap_to_markov.png)
 
@@ -221,7 +226,7 @@ Using last-touch as the budget guide would misallocate an estimated {fmt_money_k
 
 ## 4. Reallocation Scenarios
 
-Three scenarios translate attribution into operating choices.
+I modeled three levels of change. The more aggressive the shift, the higher the estimated contribution lift, but the less comfortable I would be rolling it out without a test.
 
 | Scenario | Estimated Lift | Incremental ROAS | Tradeoff |
 |---|---:|---:|---|
@@ -234,42 +239,41 @@ Three scenarios translate attribution into operating choices.
 
 ---
 
-## 5. Recommended Approach
+## 5. Recommendation
 
-Use a balanced reallocation, not a full swing to the model.
+Use the balanced scenario.
 
 - Shift 65% of the gap between current spend and Markov-informed spend.
 - Expected assumed contribution lift: {fmt_money_k(balanced['estimated_revenue_lift'])}, or {fmt_pct(balanced['estimated_lift_pct'])}.
-- Keep last-touch reporting for operational diagnostics, but do not use it as the primary budget allocator.
+- Keep last-touch as a reporting view, not the main budget allocator.
 - Validate the recommendation with a holdout or incrementality test before scaling.
 
 ---
 
-## 6. Deployment Strategy
+## 6. How I Would Roll It Out
 
-1. Keep current tracking taxonomy stable for one quarter.
-2. Report first-touch, last-touch, linear, and Markov credit side by side.
-3. Move budget in staged increments with guardrails on CPA, margin, and conversion volume.
-4. Use experiments to calibrate causal lift where the attribution model suggests material spend shifts.
-
----
-
-## 7. Appendix: Methodology
-
-- Dataset: processed sample from CriteoPrivateAd public anonymized advertising data.
-- Grain: one display impression transformed into one attribution touchpoint.
-- Channel definition: anonymized publisher placement groups, with the top eight publishers shown separately and the remaining publishers grouped as Long-tail placements.
-- Baselines: first-touch, last-touch, and linear attribution.
-- Data-driven model: Markov chain removal effect, which measures conversion-probability drop when a channel is removed from paths.
-- Budget model: assumed pilot spend, assumed contribution per sale, Markov credit shares, and a diminishing-returns response curve.
+1. Keep tracking stable for one quarter.
+2. Show first-touch, last-touch, linear, and Markov side by side.
+3. Move budget in stages, with guardrails on CPA, margin, and conversion volume.
+4. Test the biggest proposed shifts before making them permanent.
 
 ---
 
-## 8. Appendix: Limitations
+## 7. Method Notes
+
+- Data: processed CriteoPrivateAd sample.
+- Grain: one display impression becomes one attribution touchpoint.
+- Placement groups: top eight publishers shown separately; the rest grouped as Long-tail placements.
+- Models: first-touch, last-touch, linear, and Markov removal.
+- Budget layer: assumed pilot spend, assumed contribution per sale, and a simple diminishing-returns curve.
+
+---
+
+## 8. Limits
 
 - Attribution is correlational, not causal.
-- The sample is real Criteo data, but the channel names are anonymized and the repo uses one downloaded shard, not the full 100M-row dataset.
-- Channel costs, gross margin, customer lifetime value, and saturation would need real business inputs.
-- Real deployment should reconcile attribution with incrementality tests, media-mix modeling, and finance-approved contribution economics.
+- The source is real Criteo data, but the publisher names are anonymized.
+- The repo uses one shard, not the full CriteoPrivateAd dataset.
+- Real deployment would need actual spend, margin, LTV, saturation, and finance-approved contribution economics.
 """
     path.write_text(body, encoding="utf-8")

@@ -2,56 +2,55 @@
 
 Portfolio project by Shalom Wu (GitHub: @shalom-wu)
 
-This repo analyzes how different attribution methods change marketing budget decisions for a mid-size e-commerce business. The important business point is simple: last-touch attribution is convenient, but it can send money toward the final observed touchpoint while under-crediting earlier touches that helped move the journey forward.
+I built this project around a common marketing problem: last-touch attribution is easy to explain, but it can quietly distort budget decisions. If the final touchpoint gets all the credit, teams can overfund what closes the journey and underfund what helped create it.
 
-## Data Source
+The goal here is not to make attribution look more complicated than it needs to be. The goal is to show how the choice of attribution method changes the budget conversation.
 
-This project now uses a sourced public dataset: [CriteoPrivateAd](https://huggingface.co/datasets/criteo/CriteoPrivateAd), a Criteo-hosted anonymized advertising dataset on Hugging Face.
+## Data
 
-Important source notes:
+The analysis uses [CriteoPrivateAd](https://huggingface.co/datasets/criteo/CriteoPrivateAd), a public anonymized advertising dataset hosted by Criteo on Hugging Face. I use one processed sample from `day_int=1`, Parquet shard `part-00238`.
 
-- The repo uses one processed sample from `day_int=1`, Parquet shard `part-00238`.
-- The source contains real anonymized display-ad impressions, user IDs, campaign IDs, publisher IDs, click labels, and sales labels.
-- The source does **not** disclose named marketing channels, actual calendar dates, advertiser revenue, or a real media budget.
-- This repo maps the top publisher placements to `Publisher 01` through `Publisher 08` and groups the remaining publishers as `Long-tail placements`.
-- `touchpoint_date` is a relative plotting date derived from `day_int=1`, not a real Criteo calendar date.
-- Dollarized ROI uses explicit assumptions: an assumed pilot budget and `$120` contribution per sale.
+The source data includes real anonymized display-ad impressions, user IDs, campaign IDs, publisher IDs, click labels, and sales labels. It does not include friendly channel names, true calendar dates, advertiser revenue, or a real media budget. Because of that, I label the top publisher placements as `Publisher 01` through `Publisher 08`, group the rest as `Long-tail placements`, and keep the dollar layer clearly assumption-based.
 
-## Key Findings
+In plain terms: the journeys and conversions are sourced from Criteo. The budget and contribution dollars are modeling assumptions.
 
-- **24,075 sourced touchpoints across 11,343 multi-touch journeys** were prepared from the Criteo shard.
-- **Journey conversion rate is 1.8%** in the processed multi-touch sample, with **2.12 average touches per journey**.
-- **Last-touch and Markov do not tell the same story.** `Publisher 03` receives **3.8%** credit under last-touch vs. **5.6%** under Markov removal, while `Publisher 04` receives **7.3%** under last-touch vs. **4.1%** under Markov.
-- **The cost of using last-touch as the budget guide is dollarized with assumptions**, not claimed from source spend data: **$8.1K**, or **4.7%** of the assumed pilot budget, would be misdirected versus the Markov-informed allocation.
-- **Recommended approach: balanced reallocation.** Shift **$33.3K** toward the Markov-informed mix for an estimated **$6.5K assumed contribution lift**, then validate with incrementality testing before scaling.
+## What I Found
+
+The processed sample contains **24,075 touchpoints** across **11,343 multi-touch journeys**. Journey conversion rate is **1.8%**, and the average journey has **2.12 touches**.
+
+Last-touch and Markov attribution are close on the biggest bucket, but they disagree meaningfully on smaller placement groups. `Publisher 03` gets **3.8%** credit under last-touch and **5.6%** under Markov removal. `Publisher 04` moves the other way: **7.3%** under last-touch and **4.1%** under Markov.
+
+Using last-touch as the budget guide would misdirect an estimated **$8.1K**, or **4.7%** of the assumed pilot budget, compared with the Markov-informed allocation. My recommended scenario is a balanced move: shift **$33.3K** toward the Markov mix, with an estimated **$6.5K assumed contribution lift**, then validate before scaling.
 
 ## Why This Matters
 
-Most naive attribution work stops at "which channel gets credit?" This project connects attribution to the actual operating decision: where a marketing team should move budget, and what tradeoff it is accepting. The recommendation is deliberately not "trust the model blindly." It is a staged reallocation with a causal caveat.
+A lot of attribution projects stop once they produce a model output. I wanted this one to go one step further: what would a marketing team actually do differently on Monday morning?
 
-## Methodology
+My answer is not "throw away last-touch." Last-touch is still useful as a simple operational view. I would not use it as the main budget allocator, though. For budget decisions, the Markov model gives a better read on how placements work together across the path.
 
-1. **Source and prepare data:** download a CriteoPrivateAd Parquet shard, filter to users with at least two impressions, and transform each impression into a touchpoint row.
-2. **EDA:** publisher-placement touch frequency, conversion rates by placement exposure, journey length, and common paths.
-3. **Naive baselines:** first-touch, last-touch, and linear attribution.
-4. **Data-driven attribution:** Markov chain removal-effect attribution, measuring how modeled conversion probability changes when a placement group is removed from the transition graph.
-5. **Budget strategy:** compare assumed current budget, last-touch allocation, and Markov-informed allocation; then estimate staged reallocation scenarios with a diminishing-returns response curve.
+## Method
 
-## Repo Structure
+1. Download and prepare a CriteoPrivateAd Parquet shard.
+2. Keep users with at least two impressions, so the analysis is genuinely multi-touch.
+3. Turn each impression into a touchpoint row.
+4. Compare first-touch, last-touch, linear, and Markov removal attribution.
+5. Translate the attribution results into budget scenarios using explicit spend and contribution assumptions.
 
-| Path | Purpose |
+## Repo Map
+
+| Path | What to look for |
 |---|---|
-| `data-sources.md` | Dataset provenance and transformation notes |
-| `data/processed/criteo_touchpoints_sample.csv` | Processed sourced Criteo sample used by the project |
-| `src/attribution_roi/` | Data preparation, attribution, budget, reporting, and visualization code |
-| `scripts/` | One-command scripts for download, analysis, deck, and notebook |
-| `outputs/` | Analysis tables and model outputs |
-| `reports/` | Executive summary, strategy deck, and presentation visuals |
-| `notebooks/` | Reproducible notebook companion |
-| `tests/` | Unit tests for source prep, attribution, and budget logic |
-| `explainer-guide/` | Plain-English guide for non-technical readers |
+| `data-sources.md` | Where the data came from and how I transformed it |
+| `data/processed/criteo_touchpoints_sample.csv` | The processed Criteo sample used in the analysis |
+| `src/attribution_roi/` | Source prep, attribution logic, budget logic, and charting |
+| `scripts/` | Rebuild scripts |
+| `outputs/` | Generated tables |
+| `reports/` | Summary report, markdown deck, and visuals |
+| `notebooks/` | Notebook companion |
+| `tests/` | Unit tests for source prep, attribution, and budget calculations |
+| `explainer-guide/` | Plain-English walkthrough |
 
-## Reproduce The Project
+## Run It
 
 Use the committed processed sample:
 
@@ -61,7 +60,7 @@ python scripts/run_all.py
 pytest
 ```
 
-Re-download and rebuild the processed sample from Hugging Face:
+Or re-download the Criteo shard first:
 
 ```bash
 pip install -r requirements.txt
@@ -70,7 +69,7 @@ python scripts/run_all.py
 pytest
 ```
 
-The raw Parquet shard is ignored under `data/raw/` because it is about 100 MB.
+The raw Parquet file is ignored under `data/raw/` because it is about 100 MB.
 
 ## Main Outputs
 
@@ -80,13 +79,13 @@ The raw Parquet shard is ignored under `data/raw/` because it is about 100 MB.
 - Attribution table: `outputs/attribution_summary.csv`
 - Budget scenarios: `outputs/scenario_summary.csv`
 
-## Limitations
+## Limits I Would Call Out In An Interview
 
-- **Anonymized source:** CriteoPrivateAd uses anonymized IDs, so the repo analyzes publisher-placement groups rather than human-readable marketing channel names.
-- **Relative dates:** the source is partitioned by `day_int`; calendar dates are not disclosed.
-- **Sampled scope:** the repo uses one shard and multi-touch users from that shard, not the full 100M-row dataset.
-- **Correlational attribution:** Markov removal uses observed journey paths; it does not prove causal incrementality.
-- **Dollar assumptions:** source data includes sales labels but not advertiser revenue or budget, so ROI uses explicit assumed contribution and spend.
+- Criteo anonymizes the source data, so the analysis is about publisher placement groups, not named channels like Search, Social, or Email.
+- Dates are relative `day_int` partitions, not real calendar dates.
+- The repo uses one shard and multi-touch users from that shard, not the full CriteoPrivateAd dataset.
+- Attribution is correlational. It allocates credit across observed paths, but it does not prove incrementality.
+- The ROI layer uses assumed spend and assumed contribution per sale because the source data does not include advertiser budget or revenue.
 
 ## License
 

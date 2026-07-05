@@ -1,6 +1,6 @@
-# Source Data Assumptions
+# Source Data Notes
 
-This dataset sample is sourced from CriteoPrivateAd, a public anonymized Criteo advertising dataset hosted on Hugging Face. The repo keeps a processed sample rather than the raw Parquet shard.
+This sample comes from CriteoPrivateAd, a public anonymized advertising dataset hosted on Hugging Face. I keep the processed sample in the repo and leave the raw Parquet shard out because it is large.
 
 | Field | Assumption |
 |---|---|
@@ -13,9 +13,9 @@ This dataset sample is sourced from CriteoPrivateAd, a public anonymized Criteo 
 
 ## Transformation Notes
 
-- channel is an anonymized publisher placement group. Top eight publishers by touch volume are mapped to Publisher 01-08; the rest are grouped as Long-tail placements.
-- CriteoPrivateAd partitions by relative day_int, not real calendar dates. The repo maps day_int=1 to 2025-01-01 as a relative plotting date.
-- Revenue is modeled as sales_count * $120 assumed contribution per sale because source data provides sales counts but not advertiser revenue.
+- `channel` is an anonymized publisher placement group. The eight highest-volume publishers are labeled `Publisher 01` through `Publisher 08`; everything else is grouped as `Long-tail placements`.
+- CriteoPrivateAd uses relative `day_int` partitions, not real calendar dates. I map `day_int=1` to `2025-01-01` only to keep plots and tables readable.
+- Contribution value is modeled as `sales_count * $120` because the source provides sales labels, not advertiser revenue.
 - Channels included: Publisher 01, Publisher 02, Publisher 03, Publisher 04, Publisher 05, Publisher 06, Publisher 07, Publisher 08, Long-tail placements.
 
-The source contains real anonymized display-ad impressions, campaign/publisher IDs, clicks, and sales labels. It does not contain named marketing channels, actual calendar dates, advertiser revenue, or a finance-approved media budget.
+The source contains real anonymized display-ad impressions, campaign and publisher IDs, click labels, and sales labels. It does not contain named marketing channels, actual calendar dates, advertiser revenue, or a finance-approved media budget.
