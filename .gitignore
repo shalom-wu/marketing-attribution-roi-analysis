@@ -28,3 +28,8 @@ Thumbs.db
 *.log
 .mplconfig/
 data/raw/
+data/powerbi/tmp_*.csv
+
+# Internal prep docs
+explainer-guide/
+docs/explain-it-to-me.md

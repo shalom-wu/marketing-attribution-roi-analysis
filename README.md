@@ -48,7 +48,6 @@ My answer is not "throw away last-touch." Last-touch is still useful as a simple
 | `reports/` | Summary report, markdown deck, and visuals |
 | `notebooks/` | Notebook companion |
 | `tests/` | Unit tests for source prep, attribution, and budget calculations |
-| `explainer-guide/` | Plain-English walkthrough |
 
 ## Run It
 
@@ -69,15 +68,70 @@ python scripts/run_all.py
 pytest
 ```
 
-The raw Parquet file is ignored under `data/raw/` because it is about 100 MB.
+The raw Parquet shard and processed project sample are included, so a reviewer
+can inspect and run the project without downloading Criteo data first.
+
+## SQL and Power BI layer
+
+The [sql/](sql) folder adds DuckDB validation and KPI views over the included
+touchpoint sample and attribution outputs. It checks journey count, channel
+coverage, duplicate touchpoint IDs, converted journeys, and source framing.
+
+```bash
+python scripts/run_sql.py
+```
+
+The runner exports Power BI-ready files to `data/powerbi/`: touchpoints,
+journey summary, channel funnel, attribution summary, budget reallocation,
+scenario summary, and journey patterns. The [power-bi/](power-bi) folder
+contains the dashboard brief, data model, DAX, refresh instructions, manual
+build guide, and mockups. No `.pbix` is included yet; I did not create a
+placeholder file.
 
 ## Main Outputs
 
 - Strategy deck: `reports/strategy_deck.md`
 - Executive report: `reports/summary.md`
-- Beginner explainer: `explainer-guide/explain-it-to-me.md`
 - Attribution table: `outputs/attribution_summary.csv`
 - Budget scenarios: `outputs/scenario_summary.csv`
+
+## Portfolio Use
+
+**CV bullets**
+
+- Built a multi-touch marketing attribution analysis from an anonymized Criteo
+  ad-event shard, converting user paths into channel credit and budget
+  scenarios.
+- Compared first-touch, last-touch, linear, and Markov-removal attribution and
+  translated differences into a transparent budget-reallocation framework.
+- SQL-focused: Added DuckDB validation and KPI exports for channel funnel,
+  attribution method gaps, budget deltas, scenarios, and journey patterns.
+- Power BI-focused: Prepared a three-page attribution and budget dashboard
+  build spec with dashboard-ready CSV inputs.
+
+**LinkedIn description**
+
+> Marketing Channel Attribution & ROI - I built this project to show how
+> attribution changes the budget conversation. The source is CriteoPrivateAd on
+> Hugging Face; Python prepares journeys and attribution models, SQL validates
+> the channel and journey cuts, and Power BI is documented as the stakeholder
+> layer for scenario review.
+
+**Interview explanation**
+
+> "Attribution is not causality, so I framed this as a decision-support model.
+> SQL checks the channel and journey tables, Python handles the Markov-removal
+> and budget math, and Power BI turns it into a scenario conversation a
+> marketing team could critique."
+
+**Likely interview questions**
+
+1. *Why not use last-touch?* Last-touch is easy but often overcredits channels
+   near conversion.
+2. *Can this prove ROI?* No. It allocates credit; I would test incrementality
+   with geo holdouts or randomized experiments.
+3. *What is assumed?* Budget and contribution per sale, because the source has
+   ad-event labels rather than advertiser finance data.
 
 ## Limits I Would Call Out In An Interview
 

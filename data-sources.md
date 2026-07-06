@@ -6,7 +6,10 @@ For this repo I worked from one shard:
 
 `https://huggingface.co/datasets/criteo/CriteoPrivateAd/resolve/main/data/day_int=1/part-00238-7fb458b7-00d9-490c-b19b-addd568a5fe9-c000.gz.parquet`
 
-That raw file is not committed because it is roughly 100 MB. The checked-in working file is the processed sample: `data/processed/criteo_touchpoints_sample.csv`.
+That raw file is included at `data/raw/criteo_day1_part-00238.parquet` because
+the portfolio requirement is that reviewers should not need to fetch data
+before inspecting the project. The checked-in working file is the processed
+project sample: `data/processed/criteo_touchpoints_sample.csv`.
 
 ## What The Source Gives Us
 
@@ -62,5 +65,8 @@ These are modeling inputs, not source data fields.
 ## Citation And Caveat
 
 Dataset: [criteo/CriteoPrivateAd on Hugging Face](https://huggingface.co/datasets/criteo/CriteoPrivateAd)
+
+The Hugging Face dataset card was checked on 2026-07-06. It lists license
+`cc-by-sa-4.0` and identifies the dataset owner as Criteo.
 
 The attribution model is still correlational. It helps allocate credit across observed paths; it does not prove that a placement caused a sale. For a real budget move, I would pair this with an incrementality test, geo holdout, randomized experiment, or media-mix model.
