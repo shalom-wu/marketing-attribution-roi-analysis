@@ -24,7 +24,7 @@ The source data contains anonymized publisher placements rather than friendly ma
 | 4 | Last-touch can misdirect budget. | Last-touch allocation differs from the Markov-informed allocation by about $8.1K, or 4.7% of the assumed pilot budget. |
 | 5 | The recommended scenario is a controlled shift, not a full reallocation. | The balanced scenario shifts $33.3K toward the Markov mix and estimates a $6.5K assumed contribution lift before validation. |
 
-![Attribution model comparison](reports/figures/attribution_model_comparison.png)
+![Attribution model comparison](https://raw.githubusercontent.com/shalom-wu/marketing-attribution-and-roi/main/reports/figures/attribution_model_comparison.png)
 
 ## Data
 
